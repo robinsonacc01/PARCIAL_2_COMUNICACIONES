@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe – Parcial 2 Comunicaciones</title>
+<style>
+  :root{
+    --bg:#eef2f5; --panel:#ffffff; --ink:#14222e; --muted:#51626f;
+    --line:#cfd8df; --accent:#0f766e; --code-bg:#0e1a24; --code-ink:#d6e4ee;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#0b141b; --panel:#121f29; --ink:#e4edf3; --muted:#9bb0bf;
+      --line:#243541; --accent:#3cc4b5; --code-bg:#070d12; --code-ink:#d6e4ee; }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:17px/1.65 "Segoe UI","Helvetica Neue",Arial,sans-serif}
+  a{color:var(--accent)}
+  a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  header{padding:56px 24px 40px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font:700 clamp(30px,5vw,46px)/1.15 Georgia,"Times New Roman",serif;margin:0 0 12px}
+  header p{margin:0;color:var(--muted);max-width:60ch}
+  .cta{display:inline-block;margin-top:20px;padding:10px 18px;background:var(--accent);color:#fff;border-radius:6px;font-weight:600;text-decoration:none}
+  .cta:hover{filter:brightness(1.1)}
+  nav{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:15px}
+  main{padding:8px 24px 72px}
+  section{margin-top:48px}
+  h2{font:700 28px/1.2 Georgia,"Times New Roman",serif;margin:0 0 12px}
+  h3{font-size:18px;margin:28px 0 6px}
+  p{max-width:68ch}
+  pre{background:var(--code-bg);color:var(--code-ink);padding:16px 18px;border-radius:6px;
+    overflow-x:auto;font:14px/1.6 Consolas,"Courier New",monospace;margin:10px 0 16px}
+  code{font:0.9em Consolas,"Courier New",monospace;background:var(--panel);
+    border:1px solid var(--line);padding:1px 6px;border-radius:4px}
+  pre code{background:none;border:0;padding:0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:15.5px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  ol.pasos{list-style:none;counter-reset:p;padding:0;margin:16px 0}
+  ol.pasos>li{counter-increment:p;position:relative;padding:0 0 22px 52px;border-left:2px solid var(--line);margin-left:15px}
+  ol.pasos>li:last-child{border-left-color:transparent}
+  ol.pasos>li::before{content:counter(p);position:absolute;left:-17px;top:0;width:32px;height:32px;
+    border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+  ol.pasos h3{margin:0 0 4px}
+  .nota{background:var(--panel);border-left:4px solid var(--accent);padding:12px 16px;margin:16px 0;max-width:68ch}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin:10px 0}
+  summary{cursor:pointer;font-weight:600}
+  svg{max-width:100%;height:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+  svg text{fill:var(--ink);font:13px "Segoe UI",Arial,sans-serif}
+  svg .box{fill:var(--bg);stroke:var(--accent);stroke-width:1.5}
+  svg .net{fill:none;stroke:var(--muted);stroke-dasharray:6 4}
+  svg .ln{stroke:var(--ink);stroke-width:1.4;fill:none}
+  footer{padding:24px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Despliegue multi-contenedor con Docker</h1>
+    <p>Informe del Parcial 2 práctico de Comunicaciones (Ingeniería Mecatrónica, Universidad Militar Nueva Granada): cómo se construyó la infraestructura y cómo levantarla desde cualquier equipo.</p>
+    <a class="cta" href="/index.php">Abrir el portal Joomla</a>
+    <nav aria-label="Secciones">
+      <a href="#que-se-hizo">Qué se construyó</a>
+      <a href="#arquitectura">Arquitectura</a>
+      <a href="#despliegue">Desplegar paso a paso</a>
+      <a href="#verificar">Verificar</a>
+      <a href="#otro-dispositivo">Acceso desde otro dispositivo</a>
+      <a href="#osi">Modelo OSI</a>
+      <a href="#problemas">Problemas frecuentes</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="que-se-hizo">
+  <h2>Qué se construyó</h2>
+  <p>Cinco servicios que arrancan juntos con un solo comando y quedan configurados sin pasos manuales.</p>
+  <table>
+    <tr><th>Servicio</th><th>Imagen</th><th>Función</th><th>Ruta</th></tr>
+    <tr><td>nginx</td><td><code>nginx:alpine</code></td><td>Proxy inverso. Único con puerto publicado (80).</td><td><a href="/">/</a> (esta página)</td></tr>
+    <tr><td>joomla</td><td><code>joomla:latest</code></td><td>Portal web institucional (capa 7), conectado a PostgreSQL.</td><td><a href="/index.php">/index.php</a></td></tr>
+    <tr><td>database</td><td><code>postgres:16-alpine</code></td><td>Base de datos relacional, solo en la red interna.</td><td>No expuesta</td></tr>
+    <tr><td>jupyter</td><td><code>jupyter/base-notebook</code></td><td>Análisis con un cuaderno de Python precargado.</td><td><a href="/jupyter/">/jupyter/</a></td></tr>
+    <tr><td>grafana</td><td><code>grafana/grafana</code></td><td>Dashboards aprovisionados automáticamente.</td><td><a href="/grafana/">/grafana/</a></td></tr>
+  </table>
+  <div class="nota">La dirección <code>http://localhost/</code> abre este informe. El portal de Joomla sigue enrutado por Nginx y se abre en <code>http://localhost/index.php</code>; su administración está en <code>/administrator</code>.</div>
+</section>
+
+<section id="arquitectura">
+  <h2>Arquitectura</h2>
+  <p>El tráfico del navegador entra solo por Nginx. La base de datos vive en <code>backend_net</code> y no tiene salida hacia el host.</p>
+  <svg viewBox="0 0 760 360" role="img" aria-label="Diagrama: navegador, nginx, joomla, jupyter, grafana y base de datos con sus redes">
+    <rect class="net" x="20" y="110" width="720" height="110" rx="10"/>
+    <text x="32" y="130">frontend_net</text>
+    <rect class="net" x="20" y="250" width="720" height="95" rx="10"/>
+    <text x="32" y="270">backend_net</text>
+
+    <rect class="box" x="300" y="14" width="160" height="40" rx="6"/>
+    <text x="336" y="39">Navegador (cliente)</text>
+    <path class="ln" d="M380 54 V150"/>
+    <text x="388" y="82">HTTP :80</text>
+
+    <rect class="box" x="300" y="150" width="160" height="40" rx="6"/>
+    <text x="344" y="175">nginx (proxy)</text>
+    <text x="395" y="100">/ informe</text>
+
+    <rect class="box" x="60" y="150" width="130" height="40" rx="6"/>
+    <text x="96" y="175">joomla</text>
+    <rect class="box" x="570" y="150" width="130" height="40" rx="6"/>
+    <text x="602" y="175">grafana :3000</text>
+    <rect class="box" x="300" y="228" width="160" height="0" rx="6"/>
+
+    <path class="ln" d="M300 170 H190"/>
+    <path class="ln" d="M460 170 H570"/>
+    <text x="200" y="162">/index.php</text>
+    <text x="506" y="162">/grafana/</text>
+
+    <rect class="box" x="180" y="290" width="150" height="40" rx="6"/>
+    <text x="198" y="315">jupyter :8888</text>
+    <rect class="box" x="430" y="290" width="190" height="40" rx="6"/>
+    <text x="448" y="315">database (PostgreSQL) :5432</text>
+
+    <path class="ln" d="M380 190 V215 H255 V290"/>
+    <text x="262" y="236">/jupyter/ (WebSocket)</text>
+    <path class="ln" d="M125 190 V310 H430"/>
+    <path class="ln" d="M635 190 V310 H620"/>
+    <path class="ln" d="M330 310 H430" stroke-dasharray="4 3"/>
+  </svg>
+</section>
+
+<section id="despliegue">
+  <h2>Desplegar paso a paso (desde cero, en otro equipo)</h2>
+
+  <ol class="pasos">
+    <li>
+      <h3>Instalar Docker</h3>
+      <p>Windows o macOS: instalar Docker Desktop y dejarlo abierto. Linux: instalar Docker Engine y el plugin Compose.</p>
+      <pre><code>docker --version
+docker compose version</code></pre>
+      <p>Ambos comandos deben mostrar una versión.</p>
+    </li>
+    <li>
+      <h3>Instalar Git y clonar el repositorio</h3>
+      <pre><code>git clone https://github.com/robinsonacc01/PARCIAL_2_COMUNICACIONES
+cd PARCIAL_2_COMUNICACIONES</code></pre>
+    </li>
+    <li>
+      <h3>Crear el archivo de variables</h3>
+      <p>Copia el ejemplo. Trae las credenciales por defecto para que la prueba sea inmediata.</p>
+      <pre><code># Linux / macOS / Git Bash
+cp .env.example .env
+
+# Windows PowerShell
+Copy-Item .env.example .env</code></pre>
+    </li>
+    <li>
+      <h3>Verificar que el puerto 80 esté libre</h3>
+      <p>Nginx publica el puerto 80. Si otro programa lo usa (IIS, Apache, Skype), ciérralo antes de continuar.</p>
+    </li>
+    <li>
+      <h3>Levantar los cinco contenedores</h3>
+      <pre><code>docker compose up -d</code></pre>
+      <p>La primera vez descarga las imágenes, así que necesita internet y puede tardar varios minutos.</p>
+    </li>
+    <li>
+      <h3>Esperar la inicialización</h3>
+      <p>Joomla se instala solo y Jupyter instala sus librerías de Python al arrancar. Dale entre 2 y 5 minutos.</p>
+      <pre><code>docker compose ps
+docker compose logs -f joomla jupyter</code></pre>
+      <p>Cuando <code>postgres_db</code> aparezca como <code>healthy</code> y los demás como <code>Up</code>, continúa.</p>
+    </li>
+    <li>
+      <h3>Abrir los servicios</h3>
+      <p>Abre estas direcciones en el navegador del mismo equipo.</p>
+    </li>
+  </ol>
+  <table>
+    <tr><th>Servicio</th><th>Dirección</th><th>Acceso</th></tr>
+    <tr><td>Informe (esta página)</td><td><a href="/">http://localhost/</a></td><td>Libre</td></tr>
+    <tr><td>Joomla (portal)</td><td><a href="/index.php">http://localhost/index.php</a></td><td>Libre. Administración en <code>/administrator</code> con las credenciales de <code>.env</code></td></tr>
+    <tr><td>Grafana</td><td><a href="/grafana/">http://localhost/grafana/</a></td><td>Lectura anónima. Edición con <code>GRAFANA_ADMIN_USER</code> y <code>GRAFANA_ADMIN_PASSWORD</code> de <code>.env</code></td></tr>
+    <tr><td>Jupyter</td><td><a href="/jupyter/">http://localhost/jupyter/</a></td><td>Token <code>JUPYTER_TOKEN</code> de <code>.env</code></td></tr>
+  </table>
+</section>
+
+<section id="verificar">
+  <h2>Verificar que todo funciona</h2>
+  <ol class="pasos">
+    <li>
+      <h3>Generar tráfico en Joomla</h3>
+      <p>Abre <code>http://localhost/index.php</code> y navega por varias páginas del sitio.</p>
+    </li>
+    <li>
+      <h3>Revisar Grafana</h3>
+      <p>Entra a <code>http://localhost/grafana/</code>, abre el dashboard cargado y comprueba que hay al menos dos gráficas con datos. Actualiza después de navegar Joomla para ver los cambios.</p>
+    </li>
+    <li>
+      <h3>Ejecutar el cuaderno en Jupyter</h3>
+      <p>Entra a <code>http://localhost/jupyter/</code>, abre la carpeta <code>work</code>, abre <code>analisis_datos.ipynb</code> y ejecuta todas las celdas (Run → Run All Cells).</p>
+    </li>
+    <li>
+      <h3>Comprobar la segmentación de red</h3>
+      <pre><code>docker ps
+docker exec joomla_cms getent hosts database
+docker exec nginx_proxy ping -c 2 database</code></pre>
+      <p>Solo Nginx publica puerto. Joomla resuelve <code>database</code> por el DNS interno de Docker. Nginx no alcanza la base de datos, porque no comparte red con ella.</p>
+    </li>
+  </ol>
+</section>
+
+<section id="otro-dispositivo">
+  <h2>Acceder desde otro dispositivo de la misma red</h2>
+  <p>Después de desplegar en un equipo (el host), otro celular o computador de la misma red Wi-Fi puede abrir los servicios usando la IP del host en lugar de <code>localhost</code>.</p>
+  <ol class="pasos">
+    <li>
+      <h3>Obtener la IP del host</h3>
+      <pre><code># Windows
+ipconfig
+# Linux
+hostname -I
+# macOS
+ipconfig getifaddr en0</code></pre>
+    </li>
+    <li>
+      <h3>Permitir el puerto 80 en el firewall del host</h3>
+      <p>En Windows, acepta la regla cuando Docker lo pida o crea una regla de entrada para el puerto TCP 80.</p>
+    </li>
+    <li>
+      <h3>Abrir desde el otro dispositivo</h3>
+      <p>Por ejemplo <code>http://192.168.1.50/</code> para este informe y <code>http://192.168.1.50/index.php</code> para Joomla, cambiando la IP por la del host.</p>
+    </li>
+  </ol>
+  <div class="nota">Grafana tiene configurada la URL raíz como <code>http://localhost/grafana/</code>. Desde otro dispositivo puede cargar la página pero redirigir a <code>localhost</code>. Para esa prueba, cambia <code>GF_SERVER_ROOT_URL</code> en <code>docker-compose.yml</code> por la IP del host y ejecuta <code>docker compose up -d</code> otra vez.</div>
+</section>
+
+<section id="osi">
+  <h2>Modelo OSI en la solución (resumen)</h2>
+  <table>
+    <tr><th>Capa</th><th>Qué ocurre aquí</th></tr>
+    <tr><td>7 Aplicación</td><td>HTTP entre navegador y Nginx. Nginx reenvía con <code>Host</code>, <code>X-Forwarded-For</code> y <code>X-Forwarded-Proto</code>. Jupyter usa <code>Upgrade</code> para sus WebSockets. Joomla habla el protocolo cliente/servidor de PostgreSQL.</td></tr>
+    <tr><td>4 Transporte</td><td>TCP: 80 en Nginx, 5432 en PostgreSQL, 8888 en Jupyter, 3000 en Grafana.</td></tr>
+    <tr><td>3 Red</td><td>Direccionamiento IP separado en <code>frontend_net</code> y <code>backend_net</code>. El DNS embebido de Docker (127.0.0.11) resuelve nombres de servicio. El kernel del host aplica reenvío y NAT para el puerto publicado.</td></tr>
+    <tr><td>2 Enlace</td><td>Cada contenedor tiene una interfaz virtual (<code>veth*</code>) conectada a un puente (<code>br-*</code>). ARP resuelve MAC entre contenedores del mismo bridge.</td></tr>
+  </table>
+  <p>El análisis completo está en <code>INFORME.md</code>, en la raíz del repositorio.</p>
+</section>
+
+<section id="problemas">
+  <h2>Problemas frecuentes</h2>
+  <details>
+    <summary>Joomla muestra error o no carga al principio</summary>
+    <p>Se está instalando. Espera unos minutos y revisa <code>docker compose logs joomla</code>.</p>
+  </details>
+  <details>
+    <summary>Jupyter abre pero dice «Kernel connection error»</summary>
+    <p>Revisa que Nginx tenga <code>proxy_set_header Upgrade $http_upgrade;</code> y <code>Connection "upgrade"</code> en la ruta de Jupyter.</p>
+  </details>
+  <details>
+    <summary>El cuaderno falla al importar <code>psycopg2</code> o <code>pandas</code></summary>
+    <p>Jupyter todavía está instalando librerías. Espera a que <code>docker compose logs jupyter</code> muestre el servidor listo y vuelve a ejecutar.</p>
+  </details>
+  <details>
+    <summary>«port is already allocated» al hacer up</summary>
+    <p>Otro programa usa el puerto 80. Ciérralo y repite <code>docker compose up -d</code>.</p>
+  </details>
+  <details>
+    <summary>Quiero empezar de cero</summary>
+    <pre><code>docker compose down -v
+docker compose up -d</code></pre>
+    <p>El parámetro <code>-v</code> borra los volúmenes, incluida la base de datos.</p>
+  </details>
+</section>
+
+</main>
+<footer>
+  <div class="wrap">Parcial 2 práctico de Comunicaciones. Repositorio: <a href="https://github.com/robinsonacc01/PARCIAL_2_COMUNICACIONES">github.com/robinsonacc01/PARCIAL_2_COMUNICACIONES</a></div>
+</footer>
+</body>
+</html>
